@@ -9,7 +9,7 @@ import (
 	"github.com/nbd-wtf/go-nostr"
 )
 
-func NewZapRequest(event nostr.Event, recipientPubkey string) (ZapRequest, error) {
+func ParseZapRequest(event nostr.Event, recipientPubkey string) (ZapRequest, error) {
 	if event.Kind != 9734 {
 		return ZapRequest{}, fmt.Errorf("invalid kind, expected 9734, got %d", event.Kind)
 	}
@@ -18,7 +18,6 @@ func NewZapRequest(event nostr.Event, recipientPubkey string) (ZapRequest, error
 		return ZapRequest{}, fmt.Errorf("invalid signature: %w", err)
 	}
 
-	// 태그 검증
 	p := event.Tags.Find("p")
 	if p == nil || len(p) < 2 {
 		return ZapRequest{}, fmt.Errorf("missing p tag or invalid format")
