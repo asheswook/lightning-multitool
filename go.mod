@@ -1,4 +1,4 @@
-module satdress
+module lmt
 
 go 1.24.2
 
@@ -9,7 +9,6 @@ require (
 	github.com/gorilla/mux v1.8.1
 	github.com/gorilla/websocket v1.5.3
 	github.com/nbd-wtf/go-nostr v0.51.12
-	github.com/rs/zerolog v1.34.0
 	github.com/tidwall/sjson v1.2.5
 )
 
