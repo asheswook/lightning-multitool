@@ -1,7 +1,20 @@
 package lnurl
 
+import "net/url"
+
+type Response struct {
+	Status string `json:"status,omitempty"`
+	Reason string `json:"reason,omitempty"`
+}
+
+type ErrorResponse struct {
+	Status string   `json:"status,omitempty"`
+	Reason string   `json:"reason,omitempty"`
+	URL    *url.URL `json:"-"`
+}
+
 type PayParams struct {
-	Status          string         `json:"status"`
+	Response
 	Callback        string         `json:"callback"`
 	Tag             string         `json:"tag"`
 	MaxSendable     int64          `json:"maxSendable"`
