@@ -1,4 +1,4 @@
-package nostr
+package nostrutil
 
 import (
 	"context"
