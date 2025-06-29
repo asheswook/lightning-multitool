@@ -1,25 +1,27 @@
 package main
 
 import (
+	"go.uber.org/dig"
+	"lmt/internal/config"
 	"lmt/internal/server"
+	"lmt/pkg/lndrest"
 	"log/slog"
 	"net/http"
 )
 
-func bootstrap(errChan chan error) {
-	slog.Info("Starting server, listening on :8080")
-	errChan <- http.ListenAndServe(":8080", server.Router())
-}
-
 func main() {
-	errChan := make(chan error)
-	go bootstrap(errChan)
+	container := dig.New()
 
-	for {
-		select {
-		case err := <-errChan:
+	container.Provide(config.NewConfig)
+	container.Provide(lndrest.NewClient)
+
+	err := container.Invoke(func(config *config.Config, lndClient *lndrest.Client) {
+		slog.Info("Starting server", "addr", config.Server.Host+":"+config.Server.Port)
+		if err := http.ListenAndServe(config.Server.Host+":"+config.Server.Port, server.Router(lndClient)); err != nil {
 			slog.Error("Server failed to start", "error", err)
 			panic(err)
 		}
-	}
+	})
+
+	panic(err)
 }
