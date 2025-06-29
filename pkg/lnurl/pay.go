@@ -54,3 +54,28 @@ type Metadata struct {
 	LightningAddress string
 	IsEmail          bool
 }
+
+type PayResponse struct {
+	Response
+	SuccessAction map[string]string `json:"successAction"`
+	Routes        []interface{}     `json:"routes"`
+	PR            string            `json:"pr"`
+	Disposable    bool              `json:"disposable"`
+}
+
+type SuccessActionType string
+
+func (s SuccessActionType) String() string {
+	return string(s)
+}
+
+const (
+	SuccessActionMessage SuccessActionType = "message"
+	SuccessActionURL                       = "url"
+)
+
+type SuccessAction struct {
+	Tag     SuccessActionType `json:"tag"`
+	Message string            `json:"message"`
+	URL     string            `json:"url"`
+}
