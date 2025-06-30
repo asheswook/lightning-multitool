@@ -32,6 +32,15 @@ func ProvideLNDClient(cfg *config.Config) (*lndrest.Client, error) {
 	return lndrest.NewClient(cfg.LND.Host, macaroon, "")
 }
 
+func ProvideZapMonitor(cfg *config.Config, lndClient *lndrest.Client) server.ZapMonitor {
+	return server.NewZapMonitor(
+		lndClient,
+		cfg.Nostr.PrivateKey,
+		cfg.Nostr.PublicKey,
+		cfg.Nostr.Relays,
+	)
+}
+
 func ProvideLNURLHandler(cfg *config.Config) server.LNURLHandler {
 	return server.NewLNURLHandler(
 		cfg.Username,
@@ -43,9 +52,10 @@ func ProvideLNURLHandler(cfg *config.Config) server.LNURLHandler {
 	)
 }
 
-func ProvideLNURLInvoiceHandler(cfg *config.Config, lndClient *lndrest.Client) server.LNURLInvoiceHandler {
+func ProvideLNURLInvoiceHandler(cfg *config.Config, lndClient *lndrest.Client, zapMonitor server.ZapMonitor) server.LNURLInvoiceHandler {
 	return server.NewLNURLInvoiceHandler(
 		lndClient,
+		zapMonitor,
 		cfg.Username,
 		cfg.Nostr.PublicKey,
 	)
@@ -63,6 +73,10 @@ func main() {
 	}
 
 	if err := container.Provide(ProvideLNDClient); err != nil {
+		panic(err)
+	}
+
+	if err := container.Provide(ProvideZapMonitor); err != nil {
 		panic(err)
 	}
 

@@ -1,6 +1,7 @@
 package server
 
 import (
+	"context"
 	"crypto/sha256"
 	"encoding/json"
 	"github.com/nbd-wtf/go-nostr"
@@ -14,13 +15,15 @@ import (
 
 type LNURLInvoiceHandler struct {
 	lndService     *lndrest.Client
+	zapMonitor     ZapMonitor
 	username       string
 	nostrPublicKey string
 }
 
-func NewLNURLInvoiceHandler(lndService *lndrest.Client, username, nostrPublicKey string) LNURLInvoiceHandler {
+func NewLNURLInvoiceHandler(lndService *lndrest.Client, zapMonitor ZapMonitor, username, nostrPublicKey string) LNURLInvoiceHandler {
 	return LNURLInvoiceHandler{
 		lndService:     lndService,
+		zapMonitor:     zapMonitor,
 		username:       username,
 		nostrPublicKey: nostrPublicKey,
 	}
@@ -50,18 +53,18 @@ func (h LNURLInvoiceHandler) Handle(w http.ResponseWriter, r *http.Request) {
 		ValueMsat: amount,
 	}
 
+	var nostrEvent nostr.Event
 	nostrParam := r.URL.Query().Get("nostr")
 	if nostrParam != "" {
-		var event nostr.Event
-		if err := json.Unmarshal([]byte(nostrParam), &event); err != nil {
+		if err := json.Unmarshal([]byte(nostrParam), &nostrEvent); err != nil {
 			json.NewEncoder(w).Encode(lnurl.ErrorResponse{
 				Status: "ERROR",
-				Reason: "Failed to unmarshal nostr event: " + err.Error(),
+				Reason: "Failed to unmarshal nostr nostrEvent: " + err.Error(),
 			})
 			return
 		}
 
-		if _, err := nostrpkg.ParseZapRequest(event, h.nostrPublicKey); err != nil {
+		if _, err := nostrpkg.ParseZapRequest(nostrEvent, h.nostrPublicKey); err != nil {
 			json.NewEncoder(w).Encode(lnurl.ErrorResponse{
 				Status: "ERROR",
 				Reason: "Invalid zap request: " + err.Error(),
@@ -69,7 +72,7 @@ func (h LNURLInvoiceHandler) Handle(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		// As per NIP-57, the description hash for a zap invoice is the sha256 hash of the zap request event.
+		// As per NIP-57, the description hash for a zap invoice is the sha256 hash of the zap request nostrEvent.
 		descriptionHash := sha256.Sum256([]byte(nostrParam))
 		params.DescriptionHash = descriptionHash[:]
 		params.Expiry = 300 // 5 minutes
@@ -88,6 +91,15 @@ func (h LNURLInvoiceHandler) Handle(w http.ResponseWriter, r *http.Request) {
 			Reason: "Failed to create invoice: " + err.Error(),
 		})
 		return
+	}
+
+	if nostrParam != "" {
+		go h.zapMonitor.MonitorAndSendZapReceipt(
+			context.Background(),
+			res.RHash,
+			nostrEvent,
+			nostrParam,
+		)
 	}
 
 	// According to LUD-06, the success response must be a JSON object
