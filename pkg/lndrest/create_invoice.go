@@ -38,7 +38,7 @@ func (c *Client) CreateInvoice(ctx context.Context, params CreateInvoiceParams) 
 		return CreateInvoiceResponse{}, fmt.Errorf("failed to marshal invoice request: %w", err)
 	}
 
-	url := fmt.Sprintf("%s/v1/invoices", c.host)
+	url := fmt.Sprintf("https://%s/v1/invoices", c.host)
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost, url, bytes.NewBuffer(bodyBytes))
 	if err != nil {
 		return CreateInvoiceResponse{}, fmt.Errorf("failed to create http request: %w", err)
