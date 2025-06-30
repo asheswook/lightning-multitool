@@ -27,7 +27,7 @@ type CreateInvoiceParams struct {
 type CreateInvoiceResponse struct {
 	RHash          []byte `json:"r_hash"`
 	PaymentRequest string `json:"payment_request"`
-	AddIndex       uint64 `json:"add_index"`
+	AddIndex       string `json:"add_index"`
 	PaymentAddr    []byte `json:"payment_addr"`
 }
 
@@ -45,7 +45,7 @@ func (c *Client) CreateInvoice(ctx context.Context, params CreateInvoiceParams) 
 	}
 
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("Grpc-Metadata-macaroon", c.macaroonBase64)
+	req.Header.Set("Grpc-Metadata-macaroon", c.macaroon)
 
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
