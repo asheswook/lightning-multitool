@@ -57,7 +57,7 @@ type Metadata struct {
 
 type PayResponse struct {
 	Response
-	SuccessAction map[string]string `json:"successAction"`
+	SuccessAction map[string]string `json:"successAction,omitempty"`
 	Routes        []interface{}     `json:"routes"`
 	PR            string            `json:"pr"`
 	Disposable    bool              `json:"disposable"`
