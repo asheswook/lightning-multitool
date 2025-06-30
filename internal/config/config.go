@@ -36,12 +36,12 @@ type LNURLConfig struct {
 }
 
 type LNDConfig struct {
-	Host         string `env:"LND_HOST" envDefault:"http://localhost:8080"`
+	Host         string `env:"LND_HOST" envDefault:"https://localhost:8080"`
 	MacaroonPath string `env:"LND_MACAROON_PATH" envDefault:"~/.lnd/data/chain/bitcoin/mainnet/admin.macaroon"`
 }
 
 type NostrConfig struct {
 	PrivateKey string   `env:"NOSTR_PRIVATE_KEY,notEmpty"`
 	PublicKey  string   `env:"NOSTR_PUBLIC_KEY,notEmpty"`
-	Relays     []string `env:"NOSTR_RELAYS,notEmpty" envSeparator:","`
+	Relays     []string `env:"NOSTR_RELAYS,notEmpty" envDefault:"wss://relay.damus.io,wss://nostr-pub.wellorder.net" envSeparator:","`
 }
