@@ -11,9 +11,9 @@ import (
 
 // Client is a client for the LND REST API.
 type Client struct {
-	httpClient     *http.Client
-	host           string
-	macaroonBase64 string
+	httpClient *http.Client
+	host       string
+	macaroon   string // hex encoded
 }
 
 // NewClient creates a new LND client.
@@ -42,8 +42,8 @@ func NewClient(host, macaroonBase64, certPath string) (*Client, error) {
 	}
 
 	return &Client{
-		httpClient:     httpClient,
-		host:           host,
-		macaroonBase64: macaroonBase64,
+		httpClient: httpClient,
+		host:       host,
+		macaroon:   macaroonBase64,
 	}, nil
 }
