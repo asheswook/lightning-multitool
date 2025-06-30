@@ -72,6 +72,7 @@ func (h LNURLInvoiceHandler) Handle(w http.ResponseWriter, r *http.Request) {
 		// As per NIP-57, the description hash for a zap invoice is the sha256 hash of the zap request event.
 		descriptionHash := sha256.Sum256([]byte(nostrParam))
 		params.DescriptionHash = descriptionHash[:]
+		params.Expiry = 300 // 5 minutes
 	}
 
 	commentParam := r.URL.Query().Get("comment")
