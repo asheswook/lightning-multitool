@@ -83,13 +83,20 @@ func (c *Client) SubscribeInvoices(ctx context.Context, req SubscribeInvoicesPar
 					// 정상 종료 또는 컨텍스트 취소로 인한 종료
 					return
 				}
-				slog.Error("error reading websocket message", "error", err)
+
+				slog.Error("error reading websocket message",
+					"message", message,
+					"error", err,
+				)
 				return
 			}
 
 			var streamResp SubscribeInvoicesResponse
 			if err := json.Unmarshal(message, &streamResp); err != nil {
-				slog.Error("error unmarshalling invoice stream response", "error", err)
+				slog.Error("error unmarshalling invoice stream response",
+					"message", message,
+					"error", err,
+				)
 				continue
 			}
 
