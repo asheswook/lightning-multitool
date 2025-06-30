@@ -5,6 +5,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"github.com/btcsuite/btcd/chaincfg"
 	"github.com/lightningnetwork/lnd/zpay32"
 	"github.com/nbd-wtf/go-nostr"
 )
@@ -115,7 +116,7 @@ func (z ZapReceipt) Validate(zappedUserPubkey string) error {
 	}
 	hash := sha256.Sum256(preimage)
 
-	invoice, err := zpay32.Decode(bolt11[1], nil)
+	invoice, err := zpay32.Decode(bolt11[1], &chaincfg.MainNetParams)
 	if err != nil {
 		return fmt.Errorf("failed to decode bolt11 invoice: %w", err)
 	}
