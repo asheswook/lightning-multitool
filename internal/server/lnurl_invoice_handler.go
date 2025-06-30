@@ -4,7 +4,6 @@ import (
 	"crypto/sha256"
 	"encoding/json"
 	"github.com/nbd-wtf/go-nostr"
-	"lmt/internal/config"
 	"lmt/pkg/lndrest"
 	"lmt/pkg/lnurl"
 	nostrpkg "lmt/pkg/nostr"
@@ -13,9 +12,26 @@ import (
 	"strconv"
 )
 
-func handleLNURLInvoice(client *lndrest.Client, w http.ResponseWriter, r *http.Request) {
+// LnurlInvoiceHandler는 LNURL 인보이스 관련 요청을 처리하는 핸들러 구조체입니다.
+type LNURLInvoiceHandler struct {
+	lndService     *lndrest.Client
+	username       string
+	nostrPublicKey string
+}
+
+// NewLnurlInvoiceHandler는 새로운 LNURLInvoiceHandler 인스턴스를 생성합니다.
+func NewLNURLInvoiceHandler(lndService *lndrest.Client, username, nostrPublicKey string) LNURLInvoiceHandler {
+	return LNURLInvoiceHandler{
+		lndService:     lndService,
+		username:       username,
+		nostrPublicKey: nostrPublicKey,
+	}
+}
+
+// HandleLNURLInvoice는 LNURL 인보이스 생성 요청을 처리합니다.
+func (h LNURLInvoiceHandler) Handle(w http.ResponseWriter, r *http.Request) {
 	username := r.PathValue("user")
-	if username != config.Cfg.Nostr.Username {
+	if username != h.username {
 		json.NewEncoder(w).Encode(lnurl.ErrorResponse{
 			Status: "ERROR",
 			Reason: "User not found",
@@ -48,7 +64,7 @@ func handleLNURLInvoice(client *lndrest.Client, w http.ResponseWriter, r *http.R
 			return
 		}
 
-		if _, err := nostrpkg.ParseZapRequest(event, config.Cfg.Nostr.PublicKey); err != nil {
+		if _, err := nostrpkg.ParseZapRequest(event, h.nostrPublicKey); err != nil {
 			json.NewEncoder(w).Encode(lnurl.ErrorResponse{
 				Status: "ERROR",
 				Reason: "Invalid zap request: " + err.Error(),
@@ -61,7 +77,12 @@ func handleLNURLInvoice(client *lndrest.Client, w http.ResponseWriter, r *http.R
 		params.DescriptionHash = descriptionHash[:]
 	}
 
-	res, err := client.CreateInvoice(r.Context(), params)
+	commentParam := r.URL.Query().Get("comment")
+	if commentParam != "" {
+		params.Memo = commentParam
+	}
+
+	res, err := h.lndService.CreateInvoice(r.Context(), params)
 	if err != nil {
 		slog.Error("Failed to create invoice", "error", err)
 		json.NewEncoder(w).Encode(lnurl.ErrorResponse{
