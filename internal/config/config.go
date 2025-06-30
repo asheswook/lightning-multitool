@@ -36,7 +36,7 @@ type LNURLConfig struct {
 }
 
 type LNDConfig struct {
-	Host         string `env:"LND_HOST" envDefault:"https://localhost:8080"`
+	Host         string `env:"LND_HOST" envDefault:"localhost:8080"`
 	MacaroonPath string `env:"LND_MACAROON_PATH" envDefault:"~/.lnd/data/chain/bitcoin/mainnet/admin.macaroon"`
 }
 
