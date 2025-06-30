@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/hex"
 	"fmt"
+	"github.com/nbd-wtf/go-nostr/nip19"
 	"go.uber.org/dig"
 	"lmt/internal/config"
 	"lmt/internal/server"
@@ -33,10 +34,20 @@ func ProvideLNDClient(cfg *config.Config) (*lndrest.Client, error) {
 }
 
 func ProvideZapMonitor(cfg *config.Config, lndClient *lndrest.Client) server.ZapMonitor {
+	_, vpub, err := nip19.Decode(cfg.Nostr.PublicKey)
+	if err != nil {
+		panic(err)
+	}
+
+	_, vpriv, err := nip19.Decode(cfg.Nostr.PrivateKey)
+	if err != nil {
+		panic(err)
+	}
+
 	return server.NewZapMonitor(
 		lndClient,
-		cfg.Nostr.PrivateKey,
-		cfg.Nostr.PublicKey,
+		vpub.(string),
+		vpriv.(string),
 		cfg.Nostr.Relays,
 	)
 }
@@ -53,16 +64,26 @@ func ProvideLNURLHandler(cfg *config.Config) server.LNURLHandler {
 }
 
 func ProvideLNURLInvoiceHandler(cfg *config.Config, lndClient *lndrest.Client, zapMonitor server.ZapMonitor) server.LNURLInvoiceHandler {
+	_, vpub, err := nip19.Decode(cfg.Nostr.PublicKey)
+	if err != nil {
+		panic(err)
+	}
+
 	return server.NewLNURLInvoiceHandler(
 		lndClient,
 		zapMonitor,
 		cfg.Username,
-		cfg.Nostr.PublicKey,
+		vpub.(string),
 	)
 }
 
 func ProvideNostrHandler(cfg *config.Config) server.NostrHandler {
-	return server.NewNostrHandler(cfg.Username, cfg.Nostr.PublicKey)
+	_, vpub, err := nip19.Decode(cfg.Nostr.PublicKey)
+	if err != nil {
+		panic(err)
+	}
+
+	return server.NewNostrHandler(cfg.Username, vpub.(string))
 }
 
 func main() {
@@ -96,8 +117,8 @@ func main() {
 		panic(err)
 	}
 
-	if err := container.Invoke(func(router server.Router) error {
-		return router.ListenAndServe(":8080")
+	if err := container.Invoke(func(cfg *config.Config, router server.Router) error {
+		return router.ListenAndServe(cfg.Server.Host + ":" + cfg.Server.Port)
 	}); err != nil {
 		panic(err)
 	}
