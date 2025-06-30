@@ -12,14 +12,12 @@ import (
 	"strconv"
 )
 
-// LnurlInvoiceHandler는 LNURL 인보이스 관련 요청을 처리하는 핸들러 구조체입니다.
 type LNURLInvoiceHandler struct {
 	lndService     *lndrest.Client
 	username       string
 	nostrPublicKey string
 }
 
-// NewLnurlInvoiceHandler는 새로운 LNURLInvoiceHandler 인스턴스를 생성합니다.
 func NewLNURLInvoiceHandler(lndService *lndrest.Client, username, nostrPublicKey string) LNURLInvoiceHandler {
 	return LNURLInvoiceHandler{
 		lndService:     lndService,
@@ -28,7 +26,6 @@ func NewLNURLInvoiceHandler(lndService *lndrest.Client, username, nostrPublicKey
 	}
 }
 
-// HandleLNURLInvoice는 LNURL 인보이스 생성 요청을 처리합니다.
 func (h LNURLInvoiceHandler) Handle(w http.ResponseWriter, r *http.Request) {
 	username := r.PathValue("user")
 	if username != h.username {

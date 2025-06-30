@@ -1,16 +1,33 @@
 package server
 
 import (
-	"lmt/pkg/lndrest"
+	"log/slog"
 	"net/http"
 )
 
-func Router(client *lndrest.Client) *http.ServeMux {
-	router := http.NewServeMux()
-	router.HandleFunc("GET /.well-known/lnurlp/{user}", handleLNURLPay)
-	router.HandleFunc("GET /.well-known/lnurlp/{user}/callback", func(w http.ResponseWriter, r *http.Request) {
-		handleLNURLInvoice(client, w, r)
-	})
-	router.HandleFunc("GET /.well-known/nostr.json", handleNostrJSON)
-	return router
+type Router struct {
+	lnurlInvoiceHandler LNURLInvoiceHandler
+	lnurlHandler        LNURLHandler
+	nostrHandler        NostrHandler
+}
+
+func NewRouter(lnurlInvoiceHandler LNURLInvoiceHandler, lnurlHandler LNURLHandler, nostrHandler NostrHandler) Router {
+	return Router{
+		lnurlInvoiceHandler: lnurlInvoiceHandler,
+		lnurlHandler:        lnurlHandler,
+		nostrHandler:        nostrHandler,
+	}
+}
+
+func (r Router) ServeMux() *http.ServeMux {
+	mux := http.NewServeMux()
+	mux.HandleFunc("/.well-known/lnurlp/{user}", r.lnurlHandler.Handle)
+	mux.HandleFunc("/.well-known/nostr.json", r.nostrHandler.Handle)
+	mux.HandleFunc("/.well-known/lnurlp/{user}/callback", r.lnurlInvoiceHandler.Handle)
+	return mux
+}
+
+func (r Router) ListenAndServe(addr string) error {
+	slog.Info("Listening on", "addr", addr)
+	return http.ListenAndServe(addr, r.ServeMux())
 }
