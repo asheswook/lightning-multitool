@@ -3,7 +3,6 @@ package nostr
 import (
 	"crypto/sha256"
 	"encoding/hex"
-	"encoding/json"
 	"fmt"
 	"github.com/btcsuite/btcd/chaincfg"
 	"github.com/lightningnetwork/lnd/zpay32"
@@ -39,6 +38,7 @@ func (z ZapRequest) Event() nostr.Event {
 
 type ZapReceiptParams struct {
 	ZapRequest       ZapRequest
+	ZapRequestRaw    string
 	Bolt11           string // Paid Invoice
 	Preimage         string // Preimage (hex-encoded)
 	RecipientPubkey  string // Public key of recipient
@@ -46,20 +46,22 @@ type ZapReceiptParams struct {
 }
 
 func NewZapReceipt(params ZapReceiptParams) (ZapReceipt, error) {
-	zapRequestJSON, err := json.Marshal(params.ZapRequest)
-	if err != nil {
-		return ZapReceipt{}, fmt.Errorf("failed to marshal original zap request: %w", err)
+	tags := nostr.Tags{
+		{"p", params.RecipientPubkey},
+		{"bolt11", params.Bolt11},
+		{"description", params.ZapRequestRaw},
 	}
 
-	tags := nostr.Tags{
-		{"p", params.ZapRequest.PubKey},
-		{"bolt11", params.Bolt11},
-		{"description", string(zapRequestJSON)},
-		{"preimage", params.Preimage},
+	if params.Preimage != "" {
+		tags = append(tags, nostr.Tag{"preimage", params.Preimage})
 	}
 
 	if eTag := params.ZapRequest.Tags.Find("e"); eTag != nil {
 		tags = append(tags, eTag)
+	}
+
+	if relaysTag := params.ZapRequest.Tags.Find("relays"); relaysTag != nil {
+		tags = append(tags, relaysTag)
 	}
 
 	event := nostr.Event{
@@ -70,12 +72,12 @@ func NewZapReceipt(params ZapReceiptParams) (ZapReceipt, error) {
 		Content:   "", // intended
 	}
 
-	if err = event.Sign(params.RecipientPrivkey); err != nil {
+	if err := event.Sign(params.RecipientPrivkey); err != nil {
 		return ZapReceipt{}, fmt.Errorf("failed to sign zap event: %w", err)
 	}
 
 	receipt := ZapReceipt(event)
-	if err = receipt.Validate(params.ZapRequest.PubKey); err != nil {
+	if err := receipt.Validate(); err != nil {
 		return ZapReceipt{}, fmt.Errorf("failed to validate zap receipt: %w", err)
 	}
 
@@ -88,7 +90,7 @@ func (z ZapReceipt) Event() nostr.Event {
 	return nostr.Event(z)
 }
 
-func (z ZapReceipt) Validate(zappedUserPubkey string) error {
+func (z ZapReceipt) Validate() error {
 	if z.Kind != 9735 {
 		return fmt.Errorf("invalid kind: expected 9735, got %d", z.Kind)
 	}
@@ -102,27 +104,32 @@ func (z ZapReceipt) Validate(zappedUserPubkey string) error {
 	description := z.Tags.Find("description")
 	preimageTag := z.Tags.Find("preimage")
 
-	if p == nil || bolt11 == nil || description == nil || preimageTag == nil {
+	if p == nil || bolt11 == nil || description == nil {
 		return fmt.Errorf("missing one or more required tags (p, bolt11, preimage, description)")
 	}
-
-	if p[1] != zappedUserPubkey {
-		return fmt.Errorf("p tag pubkey '%s' does not match zapped user '%s'", p[1], zappedUserPubkey)
-	}
-
-	preimage, err := hex.DecodeString(preimageTag[1])
-	if err != nil || len(preimage) != 32 {
-		return fmt.Errorf("invalid preimage format: %w", err)
-	}
-	hash := sha256.Sum256(preimage)
 
 	invoice, err := zpay32.Decode(bolt11[1], &chaincfg.MainNetParams)
 	if err != nil {
 		return fmt.Errorf("failed to decode bolt11 invoice: %w", err)
 	}
 
-	if *invoice.PaymentHash != hash {
-		return fmt.Errorf("preimage hash does not match invoice payment_hash")
+	if len(preimageTag) > 1 {
+		preimage, err := hex.DecodeString(preimageTag[1])
+		if err != nil || len(preimage) != 32 {
+			return fmt.Errorf("invalid preimage format: %w", err)
+		}
+		hash := sha256.Sum256(preimage)
+
+		if *invoice.PaymentHash != hash {
+			return fmt.Errorf("preimage hash does not match invoice payment_hash")
+		}
+	}
+
+	if invoice.DescriptionHash != nil {
+		dh := sha256.Sum256([]byte(description[1]))
+		if dh != *invoice.DescriptionHash {
+			return fmt.Errorf("description hash mismatch")
+		}
 	}
 
 	return nil

@@ -19,11 +19,11 @@ type ZapMonitor struct {
 	relays          []string
 }
 
-func NewZapMonitor(lnd *lndrest.Client, pk, pubkey string, relays []string) ZapMonitor {
+func NewZapMonitor(lnd *lndrest.Client, pubkey, privKey string, relays []string) ZapMonitor {
 	return ZapMonitor{
 		lndService:      lnd,
-		nostrPrivateKey: pk,
 		nostrPublicKey:  pubkey,
+		nostrPrivateKey: privKey,
 		relays:          relays,
 	}
 }
@@ -32,7 +32,7 @@ func (zm ZapMonitor) MonitorAndSendZapReceipt(
 	ctx context.Context,
 	paymentHash []byte,
 	originalZapRequest nostr.Event,
-	originalZapRequestRaw string,
+	zapRequestRaw string,
 ) {
 	paymentHashHex := hex.EncodeToString(paymentHash)
 	logger := slog.With("payment_hash", paymentHashHex, "zap_request_id", originalZapRequest.ID)
@@ -58,9 +58,16 @@ func (zm ZapMonitor) MonitorAndSendZapReceipt(
 				return
 			}
 
-			if hex.EncodeToString(invoice.RHash) == paymentHashHex && invoice.State == lndrest.InvoiceState_SETTLED {
+			logger.Info("Received invoice",
+				"amount_msat", invoice.AmtPaidMsat,
+				"state", invoice.State,
+				"invoice", invoice,
+				"rhash", hex.EncodeToString(invoice.RHash),
+			)
+
+			if invoice.State == lndrest.InvoiceState_SETTLED && hex.EncodeToString(invoice.RHash) == paymentHashHex {
 				logger.Info("Invoice paid for ZAP", "amount_msat", invoice.AmtPaidMsat)
-				zm.publishZapReceipt(invoice, originalZapRequest, originalZapRequestRaw)
+				zm.publishZapReceipt(invoice, originalZapRequest, zapRequestRaw)
 				return // 임무 완료, 고루틴 종료
 			}
 		}
@@ -77,6 +84,7 @@ func (zm ZapMonitor) publishZapReceipt(
 	// pkg/nostr/zap.go에 정의된 NewZapReceipt 함수를 사용하여 Receipt를 생성합니다.
 	receipt, err := nostrspec.NewZapReceipt(nostrspec.ZapReceiptParams{
 		ZapRequest:       nostrspec.ZapRequest(zapRequest),
+		ZapRequestRaw:    zapRequestRaw,
 		Bolt11:           paidInvoice.PaymentRequest,
 		Preimage:         preimageHex,
 		RecipientPubkey:  zm.nostrPublicKey,

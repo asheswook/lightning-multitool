@@ -53,10 +53,15 @@ func ProvideZapMonitor(cfg *config.Config, lndClient *lndrest.Client) server.Zap
 }
 
 func ProvideLNURLHandler(cfg *config.Config) server.LNURLHandler {
+	_, vpub, err := nip19.Decode(cfg.Nostr.PublicKey)
+	if err != nil {
+		panic(err)
+	}
+
 	return server.NewLNURLHandler(
 		cfg.Username,
 		cfg.LNURL.Domain,
-		cfg.Nostr.PublicKey,
+		vpub.(string),
 		cfg.LNURL.MaxSendableMsat,
 		cfg.LNURL.MinSendableMsat,
 		cfg.LNURL.CommentAllowed,
