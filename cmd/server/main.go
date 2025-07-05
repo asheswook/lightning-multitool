@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/nbd-wtf/go-nostr/nip19"
 	"go.uber.org/dig"
+	"lmt/internal/app"
 	"lmt/internal/config"
 	"lmt/internal/server"
 	"lmt/pkg/lndrest"
@@ -33,7 +34,7 @@ func ProvideLNDClient(cfg *config.Config) (*lndrest.Client, error) {
 	return lndrest.NewClient(cfg.LND.Host, macaroon, "")
 }
 
-func ProvideZapMonitor(cfg *config.Config, lndClient *lndrest.Client) server.ZapMonitor {
+func ProvideZapMonitor(cfg *config.Config, lndClient *lndrest.Client) app.ZapMonitor {
 	_, vpub, err := nip19.Decode(cfg.Nostr.PublicKey)
 	if err != nil {
 		panic(err)
@@ -44,7 +45,7 @@ func ProvideZapMonitor(cfg *config.Config, lndClient *lndrest.Client) server.Zap
 		panic(err)
 	}
 
-	return server.NewZapMonitor(
+	return app.NewZapMonitor(
 		lndClient,
 		vpub.(string),
 		vpriv.(string),
@@ -52,13 +53,13 @@ func ProvideZapMonitor(cfg *config.Config, lndClient *lndrest.Client) server.Zap
 	)
 }
 
-func ProvideLNURLHandler(cfg *config.Config) server.LNURLHandler {
+func ProvideLNURLHandler(cfg *config.Config) app.LNURLHandler {
 	_, vpub, err := nip19.Decode(cfg.Nostr.PublicKey)
 	if err != nil {
 		panic(err)
 	}
 
-	return server.NewLNURLHandler(
+	return app.NewLNURLHandler(
 		cfg.Username,
 		cfg.LNURL.Domain,
 		vpub.(string),
@@ -68,13 +69,13 @@ func ProvideLNURLHandler(cfg *config.Config) server.LNURLHandler {
 	)
 }
 
-func ProvideLNURLInvoiceHandler(cfg *config.Config, lndClient *lndrest.Client, zapMonitor server.ZapMonitor) server.LNURLInvoiceHandler {
+func ProvideLNURLInvoiceHandler(cfg *config.Config, lndClient *lndrest.Client, zapMonitor app.ZapMonitor) app.LNURLInvoiceHandler {
 	_, vpub, err := nip19.Decode(cfg.Nostr.PublicKey)
 	if err != nil {
 		panic(err)
 	}
 
-	return server.NewLNURLInvoiceHandler(
+	return app.NewLNURLInvoiceHandler(
 		lndClient,
 		zapMonitor,
 		cfg.Username,
@@ -82,13 +83,13 @@ func ProvideLNURLInvoiceHandler(cfg *config.Config, lndClient *lndrest.Client, z
 	)
 }
 
-func ProvideNostrHandler(cfg *config.Config) server.NostrHandler {
+func ProvideNostrHandler(cfg *config.Config) app.NostrHandler {
 	_, vpub, err := nip19.Decode(cfg.Nostr.PublicKey)
 	if err != nil {
 		panic(err)
 	}
 
-	return server.NewNostrHandler(cfg.Username, vpub.(string))
+	return app.NewNostrHandler(cfg.Username, vpub.(string))
 }
 
 func main() {
