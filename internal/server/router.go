@@ -1,17 +1,18 @@
 package server
 
 import (
+	"lmt/internal/app"
 	"log/slog"
 	"net/http"
 )
 
 type Router struct {
-	lnurlInvoiceHandler LNURLInvoiceHandler
-	lnurlHandler        LNURLHandler
-	nostrHandler        NostrHandler
+	lnurlInvoiceHandler app.LNURLInvoiceHandler
+	lnurlHandler        app.LNURLHandler
+	nostrHandler        app.NostrHandler
 }
 
-func NewRouter(lnurlInvoiceHandler LNURLInvoiceHandler, lnurlHandler LNURLHandler, nostrHandler NostrHandler) Router {
+func NewRouter(lnurlInvoiceHandler app.LNURLInvoiceHandler, lnurlHandler app.LNURLHandler, nostrHandler app.NostrHandler) Router {
 	return Router{
 		lnurlInvoiceHandler: lnurlInvoiceHandler,
 		lnurlHandler:        lnurlHandler,
