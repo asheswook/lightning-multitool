@@ -1,11 +1,7 @@
 package nostr
 
 import (
-	"crypto/sha256"
-	"encoding/hex"
 	"fmt"
-	"github.com/btcsuite/btcd/chaincfg"
-	"github.com/lightningnetwork/lnd/zpay32"
 	"github.com/nbd-wtf/go-nostr"
 )
 
@@ -102,34 +98,9 @@ func (z ZapReceipt) Validate() error {
 	p := z.Tags.Find("p")
 	bolt11 := z.Tags.Find("bolt11")
 	description := z.Tags.Find("description")
-	preimageTag := z.Tags.Find("preimage")
 
 	if p == nil || bolt11 == nil || description == nil {
 		return fmt.Errorf("missing one or more required tags (p, bolt11, preimage, description)")
-	}
-
-	invoice, err := zpay32.Decode(bolt11[1], &chaincfg.MainNetParams)
-	if err != nil {
-		return fmt.Errorf("failed to decode bolt11 invoice: %w", err)
-	}
-
-	if len(preimageTag) > 1 {
-		preimage, err := hex.DecodeString(preimageTag[1])
-		if err != nil || len(preimage) != 32 {
-			return fmt.Errorf("invalid preimage format: %w", err)
-		}
-		hash := sha256.Sum256(preimage)
-
-		if *invoice.PaymentHash != hash {
-			return fmt.Errorf("preimage hash does not match invoice payment_hash")
-		}
-	}
-
-	if invoice.DescriptionHash != nil {
-		dh := sha256.Sum256([]byte(description[1]))
-		if dh != *invoice.DescriptionHash {
-			return fmt.Errorf("description hash mismatch")
-		}
 	}
 
 	return nil
