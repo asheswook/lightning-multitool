@@ -70,11 +70,6 @@ func (c *Client) SubscribeInvoices(ctx context.Context, req SubscribeInvoicesPar
 		defer close(invoiceChan)
 		defer conn.Close()
 
-		go func() {
-			<-ctx.Done()
-			conn.Close()
-		}()
-
 		for {
 			// Wait for the next message (blocked until a new message is received)
 			_, message, err := conn.ReadMessage()
