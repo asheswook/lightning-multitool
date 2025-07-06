@@ -34,7 +34,7 @@ builds:
 archives:
   - # The name template for the archive.
     # This will create archives like: lightning-multitool_1.0.0_linux_amd64.tar.gz
-    name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+    name_template: "{{ .ProjectName }}-v{{ .Version }}-{{ .Os }}-{{ .Arch }}"
     # Files to include in the archive.
     files:
       - LICENSE
