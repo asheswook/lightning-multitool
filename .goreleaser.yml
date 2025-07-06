@@ -37,7 +37,7 @@ archives:
     name_template: "{{ .ProjectName }}-v{{ .Version }}-{{ .Os }}-{{ .Arch }}"
     # Files to include in the archive.
     files:
-      - .env.example
+      - lmt.conf.example
 
 # checksum section generates a checksums file for the artifacts.
 checksum:
