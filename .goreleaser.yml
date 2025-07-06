@@ -1,5 +1,6 @@
 # .goreleaser.yml
 # Visit https://goreleaser.com/intro/ for documentation
+version: 2
 
 # The project_name can be customized.
 project_name: lightning-multitool
@@ -31,9 +32,7 @@ builds:
 
 # archives section defines how to package the binaries.
 archives:
-  - # The format of the archive.
-    format: tar.gz
-    # The name template for the archive.
+  - # The name template for the archive.
     # This will create archives like: lightning-multitool_1.0.0_linux_amd64.tar.gz
     name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
     # Files to include in the archive.
@@ -44,11 +43,6 @@ archives:
 # checksum section generates a checksums file for the artifacts.
 checksum:
   name_template: 'checksums.txt'
-
-# snapshot section is used for testing your pipeline.
-# It generates a name based on the current commit hash.
-snapshot:
-  name_template: "{{ .Tag }}-next"
 
 # changelog section generates a changelog for the release.
 changelog:
