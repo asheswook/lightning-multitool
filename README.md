@@ -30,4 +30,4 @@
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE.md](./LICENSE) file for details (if you choose to add one).
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
