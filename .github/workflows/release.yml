@@ -9,6 +9,8 @@ jobs:
   goreleaser:
     name: Build and Release with GoReleaser
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
