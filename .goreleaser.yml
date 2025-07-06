@@ -3,7 +3,7 @@
 version: 2
 
 # The project_name can be customized.
-project_name: lightning-multitool
+project_name: lmt
 
 # before hooks run before the build. You can use them to run
 # tasks like generating assets or running tests.
@@ -37,8 +37,7 @@ archives:
     name_template: "{{ .ProjectName }}-v{{ .Version }}-{{ .Os }}-{{ .Arch }}"
     # Files to include in the archive.
     files:
-      - LICENSE
-      - README.md
+      - .env.example
 
 # checksum section generates a checksums file for the artifacts.
 checksum:
@@ -50,5 +49,7 @@ changelog:
   filters:
     # Exclude commit messages that match these regexps.
     exclude:
-      - '^docs:'
-      - '^test:'
+      - '^docs'
+      - '^test'
+      - '^chore'
+      - '^ci'
