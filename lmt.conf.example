@@ -1,0 +1,52 @@
+; lmt.conf.example
+;
+; This is an example configuration file for Lightning Multitool.
+; You can copy this file to lmt.conf and edit it to your needs.
+; Settings in this file can be overridden by environment variables or command-line flags.
+
+; --- General ---
+; Your name to be addressed as.
+; Example: username=pororo
+username=
+
+; The domain connected to your lightning multitool.
+; Example: domain=yourdomain.com
+lnurl.domain=
+
+; --- Server ---
+; Specify the interfaces to listen on.
+; If you want to listen on all interfaces, use 0.0.0.0
+; Default: 127.0.0.1
+server.host=127.0.0.1
+; Default: 8080
+server.port=8080
+
+; --- LND ---
+; Your LND node's REST host.
+; Default: localhost:8080
+lnd.host=localhost:8080
+; The path to your LND node's admin macaroon file.
+; You can use invoice macaroons, but then you can't make zaps.
+; Default: ~/.lnd/data/chain/bitcoin/mainnet/admin.macaroon
+lnd.macaroonpath=~/.lnd/data/chain/bitcoin/mainnet/admin.macaroon
+
+; --- LNURL ---
+; Minimum and maximum sendable msat. 1000 msat = 1 sat.
+; Default: 1000
+lnurl.min-sendable=1000
+; Default: 1000000000
+lnurl.max-sendable=1000000000
+; Maximum comment length. Set to 0 to disable comments.
+; Default: 255
+lnurl.comment-allowed=255
+
+; --- Nostr ---
+; Your Nostr private key (nsec format).
+; Example: nostr.privatekey=nsec1...
+nostr.privatekey=
+; Your Nostr public key (npub format).
+; Example: nostr.publickey=npub1...
+nostr.publickey=
+; Your Nostr relays. Comma separated.
+; Example: nostr.relays=wss://relay.damus.io,wss://nostr.mom
+nostr.relays=wss://relay.damus.io,wss://nostr-pub.wellorder.net
