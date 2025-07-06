@@ -1,51 +1,33 @@
-name: Build & Release
+name: Release
 
 on:
   push:
-    tags: ["*"]   # 태그 푸시가 트리거
+    tags:
+      - 'v*' # Trigger on tags like v1.0.0, v0.1.0-beta
 
 jobs:
-  build-release:
+  goreleaser:
+    name: Build and Release with GoReleaser
     runs-on: ubuntu-latest
-
     steps:
-      - uses: actions/checkout@v3
-
-      # 1) CHANGELOG·릴리스 PR & 태그 자동화
-      - name: Release Please
-        uses: google-github-actions/release-please-action@v2
+      - name: Checkout code
+        uses: actions/checkout@v4
         with:
-          # Go 프로젝트라면 'go', 단순 바이너리면 'simple'
-          release-type: go
-          token: ${{ secrets.GITHUB_TOKEN }}
+          # Fetch all history so GoReleaser can generate a changelog
+          fetch-depth: 0
 
-          # section 설정 → docs·chore 등은 섹션을 안 적으면 자동 제외된다
-          changelog-types: |
-            [
-              { "type": "feat", "section": "🚀 Features" },
-              { "type": "fix",  "section": "🐞 Bug Fixes" },
-              { "type": "perf", "section": "⚡ Performance" }
-            ]
-
-      # 2) 여러 플랫폼 빌드
       - name: Set up Go
-        uses: actions/setup-go@v4
+        uses: actions/setup-go@v5
         with:
-          go-version: "1.22"
+          go-version: '1.22' # From go.mod
 
-      - name: Build binaries
-        run: |
-          targets="linux/amd64 linux/arm64 darwin/amd64 darwin/arm64 windows/amd64"
-          for t in $targets; do
-            IFS=/ read GOOS GOARCH <<<"$t"
-            out="lmt_${GOOS}_${GOARCH}$( [ "$GOOS" = windows ] && echo .exe )"
-            env GOOS=$GOOS GOARCH=$GOARCH go build -o "$out" cmd/server/main.go
-          done
-
-      # 3) 릴리스 자산 업로드
-      - name: Upload
-        uses: softprops/action-gh-release@v1
+      - name: Run GoReleaser
+        uses: goreleaser/goreleaser-action@v6
         with:
-          files: lmt_*
+          # The version of GoReleaser to use.
+          version: latest
+          # The arguments to pass to GoReleaser.
+          args: release --clean
         env:
+          # The GITHUB_TOKEN is required to create the release.
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
