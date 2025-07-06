@@ -11,7 +11,7 @@
 
 ## Getting Started
 
-[See this documentation](docs/getting-started.md).
+[See this documentation](https://lightning-multitool.pages.dev).
 
 ## Implementation
 
@@ -30,4 +30,4 @@
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md) file for details (if you choose to add one).
+This project is licensed under the MIT License - see the [LICENSE.md](./LICENSE) file for details (if you choose to add one).
