@@ -58,6 +58,7 @@ func (h OksusuHandler) OnLNURLPRequest(ctx context.Context, _ *oksusu.LNURLReque
 	var allowsNostr *bool
 	allowsNostr = nil
 	if h.nostrPublicKey != "" {
+		allowsNostr = new(bool)
 		*allowsNostr = true
 	}
 
