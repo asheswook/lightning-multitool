@@ -13,30 +13,24 @@ type pathOptions struct {
 }
 
 func NewConfig() (*Config, error) {
-	// First, parse the command line just for the config file path.
+	cfg := &Config{}
+	parser := flags.NewParser(cfg, flags.Default)
+
+	// 1단계: config 파일 경로만 먼저 파싱 (기존 방식 유지)
 	pathOpts := &pathOptions{}
-	// Use a temporary parser with IgnoreUnknown to avoid errors about other flags.
-	// We parse os.Args[1:] to avoid the program name.
 	_, err := flags.NewParser(pathOpts, flags.IgnoreUnknown).ParseArgs(os.Args[1:])
 	if err != nil {
 		slog.Error("failed to pre-parse for config file path", "error", err)
 		return nil, err
 	}
 
-	// Now, create the main config struct and its parser.
-	cfg := &Config{}
-	parser := flags.NewParser(cfg, flags.Default)
-
-	// Load settings from the config file found in the first pass.
-	// The default value in pathOptions ensures we try "lmt.conf" if nothing is specified.
+	// 2단계: INI 파일을 먼저 로드 (required 값들을 채움)
 	if pathOpts.ConfigFile != "" {
 		iniParser := flags.NewIniParser(parser)
 		err := iniParser.ParseFile(pathOpts.ConfigFile)
-		// If the file doesn't exist, we only ignore the error if it's the default path.
-		// If the user explicitly provided a path, it must exist.
 		if err != nil {
 			if os.IsNotExist(err) && pathOpts.ConfigFile == "lmt.conf" {
-				// Default config file doesn't exist, which is fine.
+				// 기본 파일이 없는 것은 괜찮음
 			} else {
 				slog.Error("failed to parse config file", "path", pathOpts.ConfigFile, "error", err)
 				return nil, err
@@ -44,9 +38,7 @@ func NewConfig() (*Config, error) {
 		}
 	}
 
-	// Finally, parse the command line arguments again. This time, the parser
-	// knows about all the flags. It will apply overrides from the command line
-	// and environment variables, and then check for all required flags.
+	// 3단계: 명령행 파싱 (INI 값을 덮어씀)
 	_, err = parser.Parse()
 	if err != nil {
 		if flagsErr, ok := err.(*flags.Error); ok && flagsErr.Type == flags.ErrHelp {
@@ -60,33 +52,44 @@ func NewConfig() (*Config, error) {
 }
 
 type Config struct {
-	ConfigFile string       `short:"c" long:"config" description:"Path to config file" default:"lmt.conf" env:"LMT_CONFIG_FILE"`
-	Server     ServerConfig `group:"Server Options"`
-	LND        LNDConfig    `group:"LND Options"`
-	Username   string       `long:"username" env:"USERNAME" description:"Username for the Lightning Address" required:"true"`
-	Nostr      NostrConfig  `group:"Nostr Options"`
-	LNURL      LNURLConfig  `group:"LNURL Options"`
+	ConfigFile string        `short:"c" long:"config" description:"Path to config file" default:"lmt.conf" env:"LMT_CONFIG_FILE"`
+	General    GeneralConfig `group:"General" namespace:"general"`
+	Server     ServerConfig  `group:"Server" namespace:"server"`
+	LND        LNDConfig     `group:"LND" namespace:"lnd"`
+	Nostr      NostrConfig   `group:"Nostr" namespace:"nostr"`
+	LNURL      LNURLConfig   `group:"LNURL" namespace:"lnurl"`
+	Oksusu     OksusuConfig  `group:"Oksusu" namespace:"oksusu"`
+}
+
+type GeneralConfig struct {
+	Username string `long:"username" env:"USERNAME" description:"Username for the Lightning Address" required:"true"`
 }
 
 type ServerConfig struct {
-	Host string `long:"server.host" env:"SERVER_HOST" description:"Server host" required:"true"`
-	Port string `long:"server.port" env:"SERVER_PORT" description:"Server port" required:"true"`
+	Host string `long:"host" env:"SERVER_HOST" description:"Server host" required:"true"`
+	Port string `long:"port" env:"SERVER_PORT" description:"Server port" required:"true"`
 }
 
 type LNURLConfig struct {
-	Domain          string `long:"lnurl.domain" env:"DOMAIN" description:"Domain for the LNURL" required:"true"`
-	MinSendableMsat int64  `long:"lnurl.min-sendable" env:"MIN_SENDABLE_MSAT" description:"Minimum sendable amount in msats" default:"1000"`
-	MaxSendableMsat int64  `long:"lnurl.max-sendable" env:"MAX_SENDABLE_MSAT" description:"Maximum sendable amount in msats" default:"1000000000"`
-	CommentAllowed  int64  `long:"lnurl.comment-allowed" env:"COMMENT_ALLOWED" description:"Maximum comment length" default:"255"`
+	Domain          string `long:"domain" env:"DOMAIN" description:"Domain for the LNURL" required:"true"`
+	MinSendableMsat int64  `long:"min-sendable" env:"MIN_SENDABLE_MSAT" description:"Minimum sendable amount in msats" default:"1000"`
+	MaxSendableMsat int64  `long:"max-sendable" env:"MAX_SENDABLE_MSAT" description:"Maximum sendable amount in msats" default:"1000000000"`
+	CommentAllowed  int64  `long:"comment-allowed" env:"COMMENT_ALLOWED" description:"Maximum comment length" default:"255"`
 }
 
 type LNDConfig struct {
-	Host         string `long:"lnd.host" env:"LND_HOST" description:"LND REST host" default:"localhost:8080"`
-	MacaroonPath string `long:"lnd.macaroonpath" env:"LND_MACAROON_PATH" description:"Path to LND admin.macaroon" default:"~/.lnd/data/chain/bitcoin/mainnet/admin.macaroon"`
+	Host         string `long:"host" env:"LND_HOST" description:"LND REST host" default:"localhost:8080"`
+	MacaroonPath string `long:"macaroonpath" env:"LND_MACAROON_PATH" description:"Path to LND admin.macaroon" default:"~/.lnd/data/chain/bitcoin/mainnet/admin.macaroon"`
 }
 
 type NostrConfig struct {
-	PrivateKey string   `long:"nostr.privatekey" env:"NOSTR_PRIVATE_KEY" description:"Nostr private key (nsec format)" required:"true"`
-	PublicKey  string   `long:"nostr.publickey" env:"NOSTR_PUBLIC_KEY" description:"Nostr public key (npub format)" required:"true"`
-	Relays     []string `long:"nostr.relays" env:"NOSTR_RELAYS" env-delim:"," description:"Comma-separated list of Nostr relays" default:"wss://relay.damus.io,wss://nostr-pub.wellorder.net"`
+	PrivateKey string   `long:"privatekey" env:"NOSTR_PRIVATE_KEY" description:"Nostr private key (nsec format)" required:"true"`
+	PublicKey  string   `long:"publickey" env:"NOSTR_PUBLIC_KEY" description:"Nostr public key (npub format)" required:"true"`
+	Relays     []string `long:"relays" env:"NOSTR_RELAYS" env-delim:"," description:"Comma-separated list of Nostr relays" default:"wss://relay.damus.io,wss://nostr-pub.wellorder.net"`
+}
+
+type OksusuConfig struct {
+	Enabled bool   `long:"enabled" env:"OKSUSU_ENABLED" description:"Enable Oksusu integration"`
+	Server  string `long:"server" env:"OKSUSU_SERVER" description:"Oksusu server" default:"oksu.su"`
+	Token   string `long:"token" env:"OKSUSU_TOKEN" description:"Your Oksu Connect authentication token"`
 }

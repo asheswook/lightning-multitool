@@ -4,24 +4,31 @@
 ; You can copy this file to lmt.conf and edit it to your needs.
 ; Settings in this file can be overridden by environment variables or command-line flags.
 
-; --- General ---
+[General]
 ; Your name to be addressed as.
 ; Example: username=pororo
-username=
+general.username=a
 
-; The domain connected to your lightning multitool.
-; Example: domain=yourdomain.com
-lnurl.domain=
+[Oksusu]
+; --- Oksu Connect ---
+; Enable this to connect your lmt instance to the oksu.su service.
+oksusu.enabled=false
+; Your authentication token from the oksu.su website.
+; Example: oksu.token=oksutkn_...
+oksusu.token=
+; The host of the Oksu server to connect to.
+; Default: oksu.su
+oksusu.server=oksu.su
 
-; --- Server ---
+[Server]
 ; Specify the interfaces to listen on.
 ; If you want to listen on all interfaces, use 0.0.0.0
 ; Default: 127.0.0.1
 server.host=127.0.0.1
-; Default: 8080
-server.port=8080
+; Default: 5050
+server.port=5050
 
-; --- LND ---
+[LND]
 ; Your LND node's REST host.
 ; Default: localhost:8080
 lnd.host=localhost:8080
@@ -30,7 +37,12 @@ lnd.host=localhost:8080
 ; Default: ~/.lnd/data/chain/bitcoin/mainnet/admin.macaroon
 lnd.macaroonpath=~/.lnd/data/chain/bitcoin/mainnet/admin.macaroon
 
+[LNURL]
 ; --- LNURL ---
+; The domain connected to your lightning multitool.
+; Example: domain=yourdomain.com
+lnurl.domain=
+
 ; Minimum and maximum sendable msat. 1000 msat = 1 sat.
 ; Default: 1000
 lnurl.min-sendable=1000
@@ -40,6 +52,7 @@ lnurl.max-sendable=1000000000
 ; Default: 255
 lnurl.comment-allowed=255
 
+[Nostr]
 ; --- Nostr ---
 ; Your Nostr private key (nsec format).
 ; Example: nostr.privatekey=nsec1...
@@ -49,4 +62,4 @@ nostr.privatekey=
 nostr.publickey=
 ; Your Nostr relays. Comma separated.
 ; Example: nostr.relays=wss://relay.damus.io,wss://nostr.mom
-nostr.relays=wss://relay.damus.io,wss://nostr-pub.wellorder.net
+nostr.relays=wss://relay.damus.io,wss://relay.primal.net
