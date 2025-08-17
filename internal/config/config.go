@@ -58,6 +58,7 @@ type Config struct {
 	ConfigFile string        `short:"c" long:"config" description:"Path to config file" default:"lmt.conf" env:"LMT_CONFIG_FILE"`
 	General    GeneralConfig `group:"General" namespace:"general"`
 	Server     ServerConfig  `group:"Server" namespace:"server"`
+	API        APIConfig     `group:"API" namespace:"api"`
 	LND        LNDConfig     `group:"LND" namespace:"lnd"`
 	Nostr      NostrConfig   `group:"Nostr" namespace:"nostr"`
 	LNURL      LNURLConfig   `group:"LNURL" namespace:"lnurl"`
@@ -71,6 +72,10 @@ type GeneralConfig struct {
 type ServerConfig struct {
 	Host string `long:"host" env:"SERVER_HOST" description:"Server host"`
 	Port string `long:"port" env:"SERVER_PORT" description:"Server port"`
+}
+
+type APIConfig struct {
+	Port string `long:"api_port" env:"API_PORT" description:"API port" default:"5051"`
 }
 
 type LNURLConfig struct {

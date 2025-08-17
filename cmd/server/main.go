@@ -145,11 +145,21 @@ func main() {
 		panic(err)
 	}
 
+	if err := container.Provide(server.NewAPI); err != nil {
+		panic(err)
+	}
+
 	if err := container.Provide(ProvideOksusuHandler); err != nil {
 		panic(err)
 	}
 
-	if err := container.Invoke(func(cfg *config.Config, router server.Router, handler app.OksusuHandler) error {
+	if err := container.Invoke(func(cfg *config.Config, router server.Router, handler app.OksusuHandler, api *server.API) error {
+		go func() {
+			if err := api.ListenAndServe(cfg.Server.Host + ":" + cfg.API.Port); err != nil {
+				panic(err)
+			}
+		}()
+
 		if cfg.Oksusu.Enabled {
 			// Oksu Connect Mode
 			if cfg.Oksusu.Token == "" {
