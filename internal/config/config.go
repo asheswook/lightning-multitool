@@ -12,39 +12,42 @@ type pathOptions struct {
 	ConfigFile string `short:"c" long:"config" description:"Path to config file" default:"lmt.conf" env:"LMT_CONFIG_FILE"`
 }
 
+// NewConfig 함수는 설정 파일을 읽고, 환경 변수를 적용한 후, 명령행 인자를 파싱하여 최종 설정을 반환합니다.
 func NewConfig() (*Config, error) {
+	// 1단계: 기본값으로 Config 구조체 초기화
 	cfg := &Config{}
 	parser := flags.NewParser(cfg, flags.Default)
 
-	// 1단계: config 파일 경로만 먼저 파싱 (기존 방식 유지)
-	pathOpts := &pathOptions{}
-	_, err := flags.NewParser(pathOpts, flags.IgnoreUnknown).ParseArgs(os.Args[1:])
+	// 2단계: 설정 파일 경로를 먼저 찾기 위해 임시 파서 사용
+	// IgnoreUnknown 옵션으로 다른 플래그는 무시하고 에러를 방지
+	var pathOpts struct {
+		ConfigFile string `short:"c" long:"config" description:"Path to config file" default:"lmt.conf" env:"LMT_CONFIG_FILE"`
+	}
+	pathParser := flags.NewParser(&pathOpts, flags.IgnoreUnknown)
+	_, err := pathParser.ParseArgs(os.Args[1:])
 	if err != nil {
-		slog.Error("failed to pre-parse for config file path", "error", err)
-		return nil, err
+		// 심각한 오류가 아니면 무시하고 진행
+		slog.Debug("could not parse config path, using defaults", "error", err)
 	}
 
-	// 2단계: INI 파일을 먼저 로드 (required 값들을 채움)
-	if pathOpts.ConfigFile != "" {
-		iniParser := flags.NewIniParser(parser)
-		err := iniParser.ParseFile(pathOpts.ConfigFile)
-		if err != nil {
-			if os.IsNotExist(err) && pathOpts.ConfigFile == "lmt.conf" {
-				// 기본 파일이 없는 것은 괜찮음
-			} else {
-				slog.Error("failed to parse config file", "path", pathOpts.ConfigFile, "error", err)
-				return nil, err
-			}
+	// 3단계: 찾은 경로로 INI 파일 파싱 (기본값을 덮어씀)
+	iniParser := flags.NewIniParser(parser)
+	if err := iniParser.ParseFile(pathOpts.ConfigFile); err != nil {
+		// 설정 파일이 없는 경우는 에러가 아님 (명령행으로만 설정 가능)
+		// 단, 기본 경로가 아닌 사용자가 명시적으로 지정한 파일이 없을 때는 경고를 표시할 수 있음
+		if !os.IsNotExist(err) {
+			slog.Warn("failed to parse config file", "path", pathOpts.ConfigFile, "error", err)
 		}
 	}
 
-	// 3단계: 명령행 파싱 (INI 값을 덮어씀)
-	_, err = parser.Parse()
+	// 4단계: 전체 명령행 파싱 (INI 값을 덮어씀)
+	// 이 단계에서 최종적으로 모든 설정이 적용되고 유효성 검사가 이루어짐
+	_, err = parser.ParseArgs(os.Args[1:])
 	if err != nil {
 		if flagsErr, ok := err.(*flags.Error); ok && flagsErr.Type == flags.ErrHelp {
 			os.Exit(0)
 		}
-		slog.Error("failed to parse config", "error", err)
+		slog.Error("failed to parse config flags", "error", err)
 		return nil, err
 	}
 
