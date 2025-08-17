@@ -66,8 +66,8 @@ type GeneralConfig struct {
 }
 
 type ServerConfig struct {
-	Host string `long:"host" env:"SERVER_HOST" description:"Server host" required:"true"`
-	Port string `long:"port" env:"SERVER_PORT" description:"Server port" required:"true"`
+	Host string `long:"host" env:"SERVER_HOST" description:"Server host"`
+	Port string `long:"port" env:"SERVER_PORT" description:"Server port"`
 }
 
 type LNURLConfig struct {
@@ -83,9 +83,9 @@ type LNDConfig struct {
 }
 
 type NostrConfig struct {
-	PrivateKey string   `long:"privatekey" env:"NOSTR_PRIVATE_KEY" description:"Nostr private key (nsec format)" required:"true"`
-	PublicKey  string   `long:"publickey" env:"NOSTR_PUBLIC_KEY" description:"Nostr public key (npub format)" required:"true"`
-	Relays     []string `long:"relays" env:"NOSTR_RELAYS" env-delim:"," description:"Comma-separated list of Nostr relays" default:"wss://relay.damus.io,wss://nostr-pub.wellorder.net"`
+	PrivateKey string   `long:"privatekey" env:"NOSTR_PRIVATE_KEY" description:"Nostr private key (nsec format)"`
+	PublicKey  string   `long:"publickey" env:"NOSTR_PUBLIC_KEY" description:"Nostr public key (npub format)"`
+	Relays     []string `long:"relays" env:"NOSTR_RELAYS" env-delim:"," description:"Comma-separated list of Nostr relays" default:"wss://relay.damus.io,wss://relay.primal.net"`
 }
 
 type OksusuConfig struct {
