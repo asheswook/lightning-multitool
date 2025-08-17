@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"encoding/hex"
 	"fmt"
 	"github.com/nbd-wtf/go-nostr/nip19"
@@ -9,10 +10,13 @@ import (
 	"lmt/internal/config"
 	"lmt/internal/server"
 	"lmt/pkg/lndrest"
+	"lmt/pkg/oksusu"
+	"log/slog"
 	"os"
 	"os/user"
 	"path/filepath"
 	"strings"
+	"time"
 )
 
 func ProvideLNDClient(cfg *config.Config) (*lndrest.Client, error) {
@@ -60,7 +64,7 @@ func ProvideLNURLHandler(cfg *config.Config) app.LNURLHandler {
 	}
 
 	return app.NewLNURLHandler(
-		cfg.Username,
+		cfg.General.Username,
 		cfg.LNURL.Domain,
 		vpub.(string),
 		cfg.LNURL.MaxSendableMsat,
@@ -78,7 +82,7 @@ func ProvideLNURLInvoiceHandler(cfg *config.Config, lndClient *lndrest.Client, z
 	return app.NewLNURLInvoiceHandler(
 		lndClient,
 		zapMonitor,
-		cfg.Username,
+		cfg.General.Username,
 		vpub.(string),
 	)
 }
@@ -89,7 +93,25 @@ func ProvideNostrHandler(cfg *config.Config) app.NostrHandler {
 		panic(err)
 	}
 
-	return app.NewNostrHandler(cfg.Username, vpub.(string))
+	return app.NewNostrHandler(cfg.General.Username, vpub.(string))
+}
+
+func ProvideOksusuHandler(cfg *config.Config, lndClient *lndrest.Client, zapMonitor app.ZapMonitor) app.OksusuHandler {
+	_, vpub, err := nip19.Decode(cfg.Nostr.PublicKey)
+	if err != nil {
+		panic(err)
+	}
+
+	return app.NewOksusuHandler(
+		cfg.General.Username,
+		cfg.Oksusu.Server,
+		vpub.(string),
+		cfg.LNURL.MaxSendableMsat,
+		cfg.LNURL.MinSendableMsat,
+		cfg.LNURL.CommentAllowed,
+		lndClient,
+		zapMonitor,
+	)
 }
 
 func main() {
@@ -123,8 +145,33 @@ func main() {
 		panic(err)
 	}
 
-	if err := container.Invoke(func(cfg *config.Config, router server.Router) error {
-		return router.ListenAndServe(cfg.Server.Host + ":" + cfg.Server.Port)
+	if err := container.Provide(ProvideOksusuHandler); err != nil {
+		panic(err)
+	}
+
+	if err := container.Invoke(func(cfg *config.Config, router server.Router, handler app.OksusuHandler) error {
+		if cfg.Oksusu.Enabled {
+			// Oksu Connect Mode
+			if cfg.Oksusu.Token == "" {
+				return fmt.Errorf("oksu.token must be set when oksu.enabled is true")
+			}
+			slog.Info("Starting in Oksusu Connect mode")
+			client := oksusu.NewClient(cfg.Oksusu.Server, cfg.Oksusu.Token, handler)
+
+			// Run in a loop to handle automatic reconnections
+			for {
+				err := client.ConnectAndServe(context.Background())
+				if err != nil {
+					slog.Error("Oksu client disconnected with error", "error", err)
+				}
+				slog.Info("Attempting to reconnect in 10 seconds...")
+				time.Sleep(10 * time.Second)
+			}
+		} else {
+			// Standalone Web Server Mode
+			slog.Info("Starting in standard web server mode")
+			return router.ListenAndServe(cfg.Server.Host + ":" + cfg.Server.Port)
+		}
 	}); err != nil {
 		panic(err)
 	}
