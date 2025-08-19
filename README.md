@@ -2,6 +2,8 @@
 
 `lightning-multitool` is an easy-to-use and lightweight multitool for people who operate personal Lightning nodes.
 
+## Warning: This project is currently working but documentation and code quality need improvement (Proof of Concept). I keep improving this project and will be tidied up soon.
+
 ## Features
 
 - Create a Lightning Address for your domain (e.g., `you@yourdomain.com`).
