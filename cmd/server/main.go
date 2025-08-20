@@ -155,7 +155,7 @@ func main() {
 
 	if err := container.Invoke(func(cfg *config.Config, router server.Router, handler app.OksusuHandler, api *server.API) error {
 		go func() {
-			if err := api.ListenAndServe(cfg.Server.Host + ":" + cfg.API.Port); err != nil {
+			if err := api.ListenAndServe("0.0.0.0" + ":" + cfg.API.Port); err != nil {
 				panic(err)
 			}
 		}()
