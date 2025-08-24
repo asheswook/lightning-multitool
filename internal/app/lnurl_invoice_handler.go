@@ -29,6 +29,11 @@ func NewLNURLInvoiceHandler(lndService *lndrest.Client, zapMonitor ZapMonitor, u
 	}
 }
 
+// isNostrEnabled checks if Nostr functionality is enabled by checking if public key is set
+func (h LNURLInvoiceHandler) isNostrEnabled() bool {
+	return h.nostrPublicKey != ""
+}
+
 func (h LNURLInvoiceHandler) Handle(w http.ResponseWriter, r *http.Request) {
 	username := r.PathValue("user")
 	if username != h.username {
@@ -55,7 +60,7 @@ func (h LNURLInvoiceHandler) Handle(w http.ResponseWriter, r *http.Request) {
 
 	var nostrEvent nostr.Event
 	nostrParam := r.URL.Query().Get("nostr")
-	if nostrParam != "" {
+	if nostrParam != "" && h.isNostrEnabled() {
 		if err := json.Unmarshal([]byte(nostrParam), &nostrEvent); err != nil {
 			json.NewEncoder(w).Encode(lnurl.ErrorResponse{
 				Status: "ERROR",
@@ -76,6 +81,13 @@ func (h LNURLInvoiceHandler) Handle(w http.ResponseWriter, r *http.Request) {
 		descriptionHash := sha256.Sum256([]byte(nostrParam))
 		params.DescriptionHash = descriptionHash[:]
 		params.Expiry = 300 // 5 minutes
+	} else if nostrParam != "" && !h.isNostrEnabled() {
+		// Return error if Nostr parameter is provided but Nostr is disabled
+		json.NewEncoder(w).Encode(lnurl.ErrorResponse{
+			Status: "ERROR",
+			Reason: "Nostr functionality is disabled",
+		})
+		return
 	}
 
 	commentParam := r.URL.Query().Get("comment")
@@ -93,7 +105,7 @@ func (h LNURLInvoiceHandler) Handle(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if nostrParam != "" {
+	if nostrParam != "" && h.isNostrEnabled() {
 		go h.zapMonitor.MonitorAndSendZapReceipt(
 			context.Background(),
 			res.RHash,
@@ -111,7 +123,7 @@ func (h LNURLInvoiceHandler) Handle(w http.ResponseWriter, r *http.Request) {
 		Disposable: false,
 	}
 
-	slog.Info("Responding with invoice", "amount", amount, "has_zap", nostrParam != "")
+	slog.Info("Responding with invoice", "amount", amount, "has_zap", nostrParam != "" && h.isNostrEnabled())
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)

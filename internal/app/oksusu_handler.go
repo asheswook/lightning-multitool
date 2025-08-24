@@ -39,6 +39,11 @@ func NewOksusuHandler(username, host, nostrPublicKey string, maxSendable, minSen
 	}
 }
 
+// isNostrEnabled checks if Nostr functionality is enabled by checking if public key is set
+func (h OksusuHandler) isNostrEnabled() bool {
+	return h.nostrPublicKey != ""
+}
+
 // OnLNURLPRequest handles the LNURL pay-request forwarded from the Oksusu server.
 func (h OksusuHandler) OnLNURLPRequest(ctx context.Context, _ *oksusu.LNURLRequestPayload) (*oksusu.LNURLResponsePayload, error) {
 	identifier := fmt.Sprintf("%s@%s", h.username, h.host)
@@ -57,7 +62,7 @@ func (h OksusuHandler) OnLNURLPRequest(ctx context.Context, _ *oksusu.LNURLReque
 
 	var allowsNostr *bool
 	allowsNostr = nil
-	if h.nostrPublicKey != "" {
+	if h.isNostrEnabled() {
 		allowsNostr = new(bool)
 		*allowsNostr = true
 	}
@@ -82,7 +87,7 @@ func (h OksusuHandler) OnInvoiceRequest(ctx context.Context, payload *oksusu.Inv
 
 	// Handle Nostr Zap request if present.
 	var nostrEvent nostr.Event
-	if payload.NostrZap != "" {
+	if payload.NostrZap != "" && h.isNostrEnabled() {
 		if err := json.Unmarshal([]byte(payload.NostrZap), &nostrEvent); err != nil {
 			return nil, fmt.Errorf("failed to unmarshal nostr event: %w", err)
 		}
@@ -94,6 +99,8 @@ func (h OksusuHandler) OnInvoiceRequest(ctx context.Context, payload *oksusu.Inv
 		descriptionHash := sha256.Sum256([]byte(payload.NostrZap))
 		params.DescriptionHash = descriptionHash[:]
 		params.Expiry = 300 // 5 minutes for zap invoices
+	} else if payload.NostrZap != "" && !h.isNostrEnabled() {
+		return nil, fmt.Errorf("Nostr functionality is disabled")
 	}
 
 	if payload.Comment != "" {
@@ -106,7 +113,7 @@ func (h OksusuHandler) OnInvoiceRequest(ctx context.Context, payload *oksusu.Inv
 	}
 
 	// If it was a zap, start monitoring for payment to send a receipt.
-	if payload.NostrZap != "" {
+	if payload.NostrZap != "" && h.isNostrEnabled() {
 		go h.zapMonitor.MonitorAndSendZapReceipt(
 			context.Background(), // Run in background
 			res.RHash,

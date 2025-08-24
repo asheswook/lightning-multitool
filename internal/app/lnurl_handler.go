@@ -27,6 +27,11 @@ func NewLNURLHandler(username, domain, nostrPublicKey string, maxSendable, minSe
 	}
 }
 
+// isNostrEnabled checks if Nostr functionality is enabled by checking if public key is set
+func (h LNURLHandler) isNostrEnabled() bool {
+	return h.nostrPublicKey != ""
+}
+
 func (h LNURLHandler) Handle(w http.ResponseWriter, r *http.Request) {
 	username := r.PathValue("user")
 
@@ -49,8 +54,25 @@ func (h LNURLHandler) Handle(w http.ResponseWriter, r *http.Request) {
 
 	j, _ := json.Marshal(metadata)
 
-	response := lnurl.PayParamsWithNostr{
-		PayParams: lnurl.PayParams{
+	if h.isNostrEnabled() {
+		response := lnurl.PayParamsWithNostr{
+			PayParams: lnurl.PayParams{
+				Response:        lnurl.Response{Status: "OK"},
+				Callback:        fmt.Sprintf("https://%s/.well-known/lnurlp/%s/callback", h.domain, h.username),
+				MaxSendable:     h.maxSendable,
+				MinSendable:     h.minSendable,
+				EncodedMetadata: string(j),
+				CommentAllowed:  h.commentAllowed,
+				Tag:             "payRequest",
+			},
+			AllowsNostr: true,
+			NostrPubkey: h.nostrPublicKey,
+		}
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(response)
+	} else {
+		response := lnurl.PayParams{
 			Response:        lnurl.Response{Status: "OK"},
 			Callback:        fmt.Sprintf("https://%s/.well-known/lnurlp/%s/callback", h.domain, h.username),
 			MaxSendable:     h.maxSendable,
@@ -58,12 +80,10 @@ func (h LNURLHandler) Handle(w http.ResponseWriter, r *http.Request) {
 			EncodedMetadata: string(j),
 			CommentAllowed:  h.commentAllowed,
 			Tag:             "payRequest",
-		},
-		AllowsNostr: true,
-		NostrPubkey: h.nostrPublicKey,
+		}
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(response)
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(response)
 }

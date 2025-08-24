@@ -28,12 +28,22 @@ func NewZapMonitor(lnd *lndrest.Client, pubkey, privKey string, relays []string)
 	}
 }
 
+// isNostrEnabled checks if Nostr functionality is enabled by checking if public key is set
+func (zm ZapMonitor) isNostrEnabled() bool {
+	return zm.nostrPublicKey != ""
+}
+
 func (zm ZapMonitor) MonitorAndSendZapReceipt(
 	ctx context.Context,
 	paymentHash []byte,
 	originalZapRequest nostr.Event,
 	zapRequestRaw string,
 ) {
+	// Early return if Nostr is disabled
+	if !zm.isNostrEnabled() {
+		return
+	}
+
 	paymentHashHex := hex.EncodeToString(paymentHash)
 	logger := slog.With("payment_hash", paymentHashHex, "zap_request_id", originalZapRequest.ID)
 

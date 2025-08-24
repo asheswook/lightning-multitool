@@ -91,13 +91,14 @@ type LNDConfig struct {
 }
 
 type NostrConfig struct {
+	Enabled    bool     `long:"enable" env:"NOSTR_ENABLE"`
 	PrivateKey string   `long:"privatekey" env:"NOSTR_PRIVATE_KEY" description:"Nostr private key (nsec format)"`
 	PublicKey  string   `long:"publickey" env:"NOSTR_PUBLIC_KEY" description:"Nostr public key (npub format)"`
 	Relays     []string `long:"relays" env:"NOSTR_RELAYS" env-delim:"," description:"Comma-separated list of Nostr relays" default:"wss://relay.damus.io,wss://relay.primal.net"`
 }
 
 type OksusuConfig struct {
-	Enabled bool   `long:"enabled" env:"OKSUSU_ENABLED" description:"Enable Oksusu integration"`
+	Enabled bool   `long:"enable" env:"OKSUSU_ENABLE" description:"Enable Oksusu integration"`
 	Server  string `long:"server" env:"OKSUSU_SERVER" description:"Oksusu server" default:"oksu.su"`
 	Token   string `long:"token" env:"OKSUSU_TOKEN" description:"Your Oksu Connect authentication token"`
 }

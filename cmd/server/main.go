@@ -39,34 +39,42 @@ func ProvideLNDClient(cfg *config.Config) (*lndrest.Client, error) {
 }
 
 func ProvideZapMonitor(cfg *config.Config, lndClient *lndrest.Client) app.ZapMonitor {
-	_, vpub, err := nip19.Decode(cfg.Nostr.PublicKey)
-	if err != nil {
-		panic(err)
-	}
-
-	_, vpriv, err := nip19.Decode(cfg.Nostr.PrivateKey)
-	if err != nil {
-		panic(err)
+	var pubkey, privkey string
+	if cfg.Nostr.Enabled {
+		_, vpub, err := nip19.Decode(cfg.Nostr.PublicKey)
+		if err != nil {
+			panic(err)
+		}
+		_, vpriv, err := nip19.Decode(cfg.Nostr.PrivateKey)
+		if err != nil {
+			panic(err)
+		}
+		pubkey = vpub.(string)
+		privkey = vpriv.(string)
 	}
 
 	return app.NewZapMonitor(
 		lndClient,
-		vpub.(string),
-		vpriv.(string),
+		pubkey,
+		privkey,
 		cfg.Nostr.Relays,
 	)
 }
 
 func ProvideLNURLHandler(cfg *config.Config) app.LNURLHandler {
-	_, vpub, err := nip19.Decode(cfg.Nostr.PublicKey)
-	if err != nil {
-		panic(err)
+	var nostrPublicKey string
+	if cfg.Nostr.Enabled {
+		_, vpub, err := nip19.Decode(cfg.Nostr.PublicKey)
+		if err != nil {
+			panic(err)
+		}
+		nostrPublicKey = vpub.(string)
 	}
 
 	return app.NewLNURLHandler(
 		cfg.General.Username,
 		cfg.LNURL.Domain,
-		vpub.(string),
+		nostrPublicKey,
 		cfg.LNURL.MaxSendableMsat,
 		cfg.LNURL.MinSendableMsat,
 		cfg.LNURL.CommentAllowed,
@@ -74,38 +82,50 @@ func ProvideLNURLHandler(cfg *config.Config) app.LNURLHandler {
 }
 
 func ProvideLNURLInvoiceHandler(cfg *config.Config, lndClient *lndrest.Client, zapMonitor app.ZapMonitor) app.LNURLInvoiceHandler {
-	_, vpub, err := nip19.Decode(cfg.Nostr.PublicKey)
-	if err != nil {
-		panic(err)
+	var nostrPublicKey string
+	if cfg.Nostr.Enabled {
+		_, vpub, err := nip19.Decode(cfg.Nostr.PublicKey)
+		if err != nil {
+			panic(err)
+		}
+		nostrPublicKey = vpub.(string)
 	}
 
 	return app.NewLNURLInvoiceHandler(
 		lndClient,
 		zapMonitor,
 		cfg.General.Username,
-		vpub.(string),
+		nostrPublicKey,
 	)
 }
 
 func ProvideNostrHandler(cfg *config.Config) app.NostrHandler {
-	_, vpub, err := nip19.Decode(cfg.Nostr.PublicKey)
-	if err != nil {
-		panic(err)
+	var nostrPublicKey string
+	if cfg.Nostr.Enabled {
+		_, vpub, err := nip19.Decode(cfg.Nostr.PublicKey)
+		if err != nil {
+			panic(err)
+		}
+		nostrPublicKey = vpub.(string)
 	}
 
-	return app.NewNostrHandler(cfg.General.Username, vpub.(string))
+	return app.NewNostrHandler(cfg.General.Username, nostrPublicKey)
 }
 
 func ProvideOksusuHandler(cfg *config.Config, lndClient *lndrest.Client, zapMonitor app.ZapMonitor) app.OksusuHandler {
-	_, vpub, err := nip19.Decode(cfg.Nostr.PublicKey)
-	if err != nil {
-		panic(err)
+	var nostrPublicKey string
+	if cfg.Nostr.Enabled {
+		_, vpub, err := nip19.Decode(cfg.Nostr.PublicKey)
+		if err != nil {
+			panic(err)
+		}
+		nostrPublicKey = vpub.(string)
 	}
 
 	return app.NewOksusuHandler(
 		cfg.General.Username,
 		cfg.Oksusu.Server,
-		vpub.(string),
+		nostrPublicKey,
 		cfg.LNURL.MaxSendableMsat,
 		cfg.LNURL.MinSendableMsat,
 		cfg.LNURL.CommentAllowed,
