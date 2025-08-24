@@ -24,8 +24,8 @@ FROM alpine:latest
 # Set the Current Working Directory inside the container
 WORKDIR /app
 
-# Copy the built binary from the builder stage
-COPY --from=builder /app/lmt .
+# Copy the built binary from the builder stage to /usr/local/bin
+COPY --from=builder /app/lmt /usr/local/bin/lmt
 
 # Copy the example configuration file
 # The user will need to mount a real configuration file
@@ -33,4 +33,4 @@ COPY lmt.conf.example /app/lmt.conf.example
 
 # Command to run the executable
 # The user will likely need to pass arguments or a config file path
-ENTRYPOINT ["/app/lmt"]
+ENTRYPOINT ["/usr/local/bin/lmt"]

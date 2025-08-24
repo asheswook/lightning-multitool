@@ -153,11 +153,17 @@ func main() {
 		panic(err)
 	}
 
+	slog.Info("Test1")
+
 	if err := container.Invoke(func(cfg *config.Config, router server.Router, handler app.OksusuHandler, api *server.API) error {
+		slog.Info("Invoke")
 		go func() {
+			slog.Info("Test2")
 			if err := api.ListenAndServe("0.0.0.0" + ":" + cfg.API.Port); err != nil {
 				panic(err)
 			}
+
+			slog.Info("Test3")
 		}()
 
 		if cfg.Oksusu.Enabled {
