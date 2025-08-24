@@ -3,7 +3,7 @@ package app
 import (
 	"encoding/json"
 	"fmt"
-	"lmt/pkg/lnurl"
+	"github.com/asheswook/lightning-multitool/pkg/lnurl"
 	"net/http"
 )
 

@@ -1,4 +1,4 @@
-module lmt
+module github.com/asheswook/lightning-multitool
 
 go 1.24.2
 

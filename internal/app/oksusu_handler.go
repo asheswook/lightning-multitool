@@ -5,9 +5,9 @@ import (
 	"crypto/sha256"
 	"encoding/json"
 	"fmt"
-	"lmt/pkg/lndrest"
-	nostrpkg "lmt/pkg/nostr"
-	"lmt/pkg/oksusu" // The package we defined earlier
+	"github.com/asheswook/lightning-multitool/pkg/lndrest"
+	nostrpkg "github.com/asheswook/lightning-multitool/pkg/nostr"
+	"github.com/asheswook/lightning-multitool/pkg/oksusu" // The package we defined earlier
 
 	"github.com/nbd-wtf/go-nostr"
 )

@@ -3,9 +3,9 @@ package app
 import (
 	"context"
 	"encoding/hex"
-	"lmt/internal/nostrutil"
-	"lmt/pkg/lndrest"
-	nostrspec "lmt/pkg/nostr"
+	"github.com/asheswook/lightning-multitool/internal/nostrutil"
+	"github.com/asheswook/lightning-multitool/pkg/lndrest"
+	nostrspec "github.com/asheswook/lightning-multitool/pkg/nostr"
 	"log/slog"
 	"time"
 

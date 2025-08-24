@@ -1,7 +1,7 @@
 package server
 
 import (
-	"lmt/internal/app"
+	"github.com/asheswook/lightning-multitool/internal/app"
 	"log/slog"
 	"net/http"
 )

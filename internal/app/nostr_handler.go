@@ -2,7 +2,7 @@ package app
 
 import (
 	"encoding/json"
-	"lmt/pkg/nostr"
+	"github.com/asheswook/lightning-multitool/pkg/nostr"
 	"net/http"
 )
 
