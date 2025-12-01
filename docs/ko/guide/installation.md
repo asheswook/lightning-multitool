@@ -32,14 +32,14 @@ Lightning Multitool을 설치하는 방법에는 두 가지가 있습니다.
 1.  **리포지토리 복제**
 
     ```bash
-    git clone https://github.com/asheswook/lnurl.git
-    cd lnurl
+    git clone https://github.com/asheswook/lightning-multitool.git
+    cd lightning-multitool
     ```
 
 2.  **프로젝트 빌드**
 
     ```bash
-    go build ./cmd/server/main.go -o lightning-multitool
+    go build -o lighting-multitool ./cmd/server/main.go
     ```
 
 3.  **바이너리 실행**

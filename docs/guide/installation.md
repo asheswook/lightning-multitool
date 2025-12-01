@@ -28,14 +28,14 @@ If you prefer to build the project from source, you'll need to have Go installed
 1.  **Clone the repository**
 
     ```bash
-    git clone https://github.com/asheswook/lnurl.git
-    cd lnurl
+    git clone https://github.com/asheswook/lightning-multitool
+    cd lightning-multitool
     ```
 
 2.  **Build the project**
 
     ```bash
-    go build ./cmd/server/main.go -o lightning-multitool
+    go build -o lighting-multitool ./cmd/server/main.go
     ```
 
 3.  **Run the binary**

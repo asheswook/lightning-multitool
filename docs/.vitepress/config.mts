@@ -38,7 +38,7 @@ export default defineConfig({
     },
 
     socialLinks: [
-      { icon: 'github', link: 'https://github.com/asheswook/lnurl' }
+      { icon: 'github', link: 'https://github.com/asheswook/lightning-multitool' }
     ]
   },
 
