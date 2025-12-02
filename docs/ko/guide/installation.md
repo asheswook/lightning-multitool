@@ -18,11 +18,11 @@ Lightning Multitool을 설치하는 방법에는 두 가지가 있습니다.
     다운로드 후 터미널에서 실행할 수 있습니다.
 
     ```bash
-    chmod +x lightning-multitool
+    chmod +x lmt
     ```
 
     ```bash
-    ./lightning-multitool
+    ./lmt
     ```
 
 ## 소스에서 빌드
@@ -39,11 +39,11 @@ Lightning Multitool을 설치하는 방법에는 두 가지가 있습니다.
 2.  **프로젝트 빌드**
 
     ```bash
-    go build -o lighting-multitool ./cmd/server/main.go
+    go build -o lmt ./cmd/server/main.go
     ```
 
 3.  **바이너리 실행**
 
     ```bash
-    ./lightning-multitool
+    ./lmt
     ```
