@@ -18,7 +18,7 @@ This is the easiest way to get started.
     After downloading, you can run the binary from your terminal:
 
     ```bash
-    ./lightning-multitool
+    ./lmt
     ```
 
 ## Building from Source
@@ -35,11 +35,11 @@ If you prefer to build the project from source, you'll need to have Go installed
 2.  **Build the project**
 
     ```bash
-    go build -o lighting-multitool ./cmd/server/main.go
+    go build -o lmt ./cmd/server/main.go
     ```
 
 3.  **Run the binary**
 
     ```bash
-    ./lightning-multitool
+    ./lmt
     ```
