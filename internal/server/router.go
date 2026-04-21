@@ -20,11 +20,28 @@ func NewRouter(lnurlInvoiceHandler app.LNURLInvoiceHandler, lnurlHandler app.LNU
 	}
 }
 
+// withCORS adds permissive CORS headers required by LUD-01/LUD-16 and NIP-05
+// so browser-based wallets can fetch these endpoints cross-origin.
+func withCORS(next http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+		w.Header().Set("Access-Control-Allow-Methods", "GET, OPTIONS")
+		w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+
+		if r.Method == http.MethodOptions {
+			w.WriteHeader(http.StatusNoContent)
+			return
+		}
+
+		next(w, r)
+	}
+}
+
 func (r Router) ServeMux() *http.ServeMux {
 	mux := http.NewServeMux()
-	mux.HandleFunc("/.well-known/lnurlp/{user}", r.lnurlHandler.Handle)
-	mux.HandleFunc("/.well-known/nostr.json", r.nostrHandler.Handle)
-	mux.HandleFunc("/.well-known/lnurlp/{user}/callback", r.lnurlInvoiceHandler.Handle)
+	mux.HandleFunc("/.well-known/lnurlp/{user}", withCORS(r.lnurlHandler.Handle))
+	mux.HandleFunc("/.well-known/nostr.json", withCORS(r.nostrHandler.Handle))
+	mux.HandleFunc("/.well-known/lnurlp/{user}/callback", withCORS(r.lnurlInvoiceHandler.Handle))
 	return mux
 }
 
